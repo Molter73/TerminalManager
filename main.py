@@ -31,6 +31,7 @@ def main():
     app = Console(master=root)
 
     menu = ManagerMenu(root)
+
     app.mainloop()
 
 
