@@ -28,9 +28,7 @@ def main():
     root = Tk()
     root.option_add('*tearOff', False)  # No tearing off menus please
 
-    app = Console(master=root)
-
-    menu = ManagerMenu(root)
+    app = ManagerMenu(root)
 
     app.mainloop()
 
