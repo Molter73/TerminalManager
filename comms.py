@@ -3,10 +3,15 @@ from threading import Thread
 from socket import timeout
 from tkinter import Text, messagebox
 import json
+import re
 
 
 class ConsoleComm(Thread):
-    COLORS = ['black','red','green','yellow','blue','violet','beige','white']
+    COLORS = ['black', 'red', 'green', 'yellow',
+              'blue', 'violet', 'beige', 'white']
+
+    color_pattern = re.compile(r'\x1b\[([0-9;]*)m')
+
     def __init__(self, output: Text, client=SSHClient(), timeout=5, config_file='./settings.json'):
         super().__init__()
         self._running = True
@@ -52,21 +57,17 @@ class ConsoleComm(Thread):
                 data = self.channel.recv(256)
             except timeout:
                 if buffer != '':
-                    if '\x1b' in buffer:
-                        for s in buffer.split('\x1b'):
-                            index = 0
+                    tags = ()
+                    begin = 0
+                    for it in self.color_pattern.finditer(buffer):
+                        self.output.insert(
+                            'end', buffer[begin:it.start()], tags)
+                        tags = self.get_tags(it.group(1))
+                        begin = it.end()
 
-                            if s[0] == '[':
-                                index = s.find('m')
-                                self.output.insert('end',
-                                                   s[index+1:],
-                                                   self.get_tags(s[1:index].split(';')))
-
-                            else:
-                                self.output.insert('end', s)
-                    else:
-                        self.output.insert('end', buffer)
+                    self.output.insert('end', buffer[begin:], tags)
                     self.output.see('end')
+
                     buffer = ''
                 continue
 
@@ -88,7 +89,7 @@ class ConsoleComm(Thread):
 
     def get_tags(self, command_list):
         format_list = list()
-        for command in command_list:
+        for command in command_list.split(';'):
             c = int(command)
             if c == 0:
                 return ()
