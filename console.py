@@ -9,6 +9,8 @@ class Console(Text):
         self.comms = ConsoleComm(output=self)
         self.comms.start()
 
+        self.bind('<Key>', lambda key: self.comms.send_key(key))
+
         self.pack()
 
     def destroy(self):

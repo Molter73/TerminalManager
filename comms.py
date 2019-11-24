@@ -39,3 +39,8 @@ class ConsoleComm(Thread):
                 self.client.close()
                 break
             self.output.insert('end', data)
+            self.output.see('end')
+
+    def send_key(self, event):
+        self.channel.send(event.char)
+        return 'break'
