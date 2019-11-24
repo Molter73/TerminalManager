@@ -1,4 +1,4 @@
-from tkinter import Text
+from tkinter import Text, font
 from comms import ConsoleComm
 
 
@@ -14,6 +14,9 @@ class Console(Text):
         self.comms.start()
 
         self.bind('<Key>', lambda key: self.comms.send_key(key))
+
+        self.configure(background='black', foreground='white',
+                       font=font.nametofont('TkFixedFont'))
 
         # Define all supported formatting
         self.tag_configure('fg-black', foreground='black')
@@ -34,7 +37,9 @@ class Console(Text):
         self.tag_configure('bg-beige', background='beige')
         self.tag_configure('bg-white', background='blue')
 
-        self.configure(background='black', foreground='white')
+        aux_font = font.nametofont('TkFixedFont').copy()
+        aux_font.configure(weight='bold')
+        self.tag_configure('bold', font=aux_font)
 
         self.pack()
 

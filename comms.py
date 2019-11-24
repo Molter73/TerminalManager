@@ -10,7 +10,12 @@ class ConsoleComm(Thread):
     COLORS = ['black', 'red', 'green', 'yellow',
               'blue', 'violet', 'beige', 'white']
 
-    color_pattern = re.compile(r'\x1b\[([0-9;]*)m')
+    '''
+    regex created based on the wikipedia ANSI escape code information
+    https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+    '''
+    CSI_pattern = re.compile(
+        r'\x1b\[([0-9;:<=>\?]*)([ !"#$%&\'()*+,\-./]*)([@A-Z\[\\\]^_`a-z{|}~])')
 
     def __init__(self, output: Text, client=SSHClient(), timeout=5, config_file='./settings.json'):
         super().__init__()
@@ -59,11 +64,12 @@ class ConsoleComm(Thread):
                 if buffer != '':
                     tags = ()
                     begin = 0
-                    for it in self.color_pattern.finditer(buffer):
-                        self.output.insert(
-                            'end', buffer[begin:it.start()], tags)
-                        tags = self.get_tags(it.group(1))
-                        begin = it.end()
+                    for it in self.CSI_pattern.finditer(buffer):
+                        if(it.group(3) == 'm'):
+                            self.output.insert(
+                                'end', buffer[begin:it.start()], tags)
+                            tags = self.get_tags(it.group(1))
+                            begin = it.end()
 
                     self.output.insert('end', buffer[begin:], tags)
                     self.output.see('end')
@@ -94,14 +100,17 @@ class ConsoleComm(Thread):
             if c == 0:
                 return ()
 
-            tag = ''
+            if c == 1:
+                format_list.append('bold')
+                continue
+
             group = int(c/10)
             color = c % 10
             if group == 3 or group == 9:
-                tag = ''.join([tag, 'fg-', self.COLORS[color]])
+                tag = ''.join(['fg-', self.COLORS[color]])
 
             if group == 4 or group == 10:
-                tag = ''.join([tag, 'bg-', self.COLORS[color]])
+                tag = ''.join(['bg-', self.COLORS[color]])
 
             if tag != '':
                 format_list.append(tag)
