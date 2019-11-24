@@ -1,6 +1,8 @@
 from tkinter import Tk, Button, Frame, Toplevel
 from console import Console
 from menu import ManagerMenu
+import os
+import json
 
 
 class Application (Frame):
@@ -24,9 +26,19 @@ class Application (Frame):
         print('Hi there!')
 
 
+def create_default_config():
+    config = {'server': {'ip':'127.0.0.1','port':22}}
+    with open('./settings.json', 'w') as fp:
+        json.dump(config, fp, indent=4)
+
+
 def main():
     root = Tk()
     root.option_add('*tearOff', False)  # No tearing off menus please
+
+    # Check if the main configuration file exists
+    if not os.path.isfile('./settings.json'):
+        create_default_config()
 
     app = ManagerMenu(root)
 
